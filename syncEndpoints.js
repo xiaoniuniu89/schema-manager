@@ -39,6 +39,11 @@ router.post('/sync-endpoints/:schema', (req, res) => {
             const sanitizedEntityName = `${sanitizedSchemaName}_${sanitizeName(entity.name)}`;
             const entityFilePath = path.join(apiFolderPath, `${sanitizedEntityName}.js`);
 
+            // Extract fields from the JSON schema
+            const entityDefinition = entity.jsonSchema.definitions[entity.name];
+            const fields = entityDefinition.properties;
+            const fieldNames = Object.keys(fields);
+
             // Generate CRUD endpoints for the entity
             const routeDefinitions = `
             const express = require('express');
@@ -46,9 +51,9 @@ router.post('/sync-endpoints/:schema', (req, res) => {
             const router = express.Router();
 
             router.post('/', (req, res) => {
-                const columns = ${JSON.stringify(entity.fields.map(field => sanitizeName(field.name)))}.join(', ');
-                const placeholders = ${JSON.stringify(entity.fields.map(() => '?'))}.join(', ');
-                const values = [${entity.fields.map(field => `req.body['${field.name}']`).join(', ')}];
+                const columns = ${JSON.stringify(fieldNames.map(field => sanitizeName(field)))}.join(', ');
+                const placeholders = ${JSON.stringify(fieldNames.map(() => '?'))}.join(', ');
+                const values = [${fieldNames.map(field => `req.body['${field}']`).join(', ')}];
 
                 const insertQuery = \`INSERT INTO ${sanitizedEntityName} (\${columns}) VALUES (\${placeholders})\`;
 
@@ -86,8 +91,8 @@ router.post('/sync-endpoints/:schema', (req, res) => {
             });
 
             router.put('/:id', (req, res) => {
-                const updates = ${JSON.stringify(entity.fields.map(field => `"${sanitizeName(field.name)}" = ?`))}.join(', ');
-                const values = [${entity.fields.map(field => `req.body['${field.name}']`).join(', ')}];
+                const updates = ${JSON.stringify(fieldNames.map(field => `"${sanitizeName(field)}" = ?`))}.join(', ');
+                const values = [${fieldNames.map(field => `req.body['${field}']`).join(', ')}];
                 values.push(req.params.id);
 
                 const updateQuery = \`UPDATE ${sanitizedEntityName} SET \${updates} WHERE id = ?\`;

@@ -42,7 +42,7 @@ router.post('/generate-tables/:schema', (req, res) => {
 
     fs.readFile(schemaPath, 'utf8', (err, data) => {
         if (err) {
-            return res.status(500).send('Error reading schema: ' +err);
+            return res.status(500).send('Error reading schema: ' + err);
         }
 
         const schema = JSON.parse(data);
@@ -51,18 +51,27 @@ router.post('/generate-tables/:schema', (req, res) => {
             // Use schema name as a namespace for table names
             const tableName = `${sanitizeName(schemaName)}_${sanitizeName(entity.name)}`;
 
+            // Retrieve the properties and required fields from the entity's JSON schema
+            const entityDefinition = entity.jsonSchema.definitions[entity.name];
+            const properties = entityDefinition.properties;
+            const requiredFields = entityDefinition.required || [];
+
             let createTableQuery = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
 
-            const fields = entity.fields.map(field => sanitizeName(field.name));
+            // Add the id column
+            createTableQuery += 'id INTEGER PRIMARY KEY AUTOINCREMENT, ';
 
-            // Add the id column only if it's not already defined in the schema
-            if (!fields.includes('id')) {
-                createTableQuery += 'id INTEGER PRIMARY KEY AUTOINCREMENT, ';
-            }
+            // Add each field definition to the create table query
+            const fieldDefinitions = Object.keys(properties).map(fieldName => {
+                const fieldType = properties[fieldName].type.toUpperCase();
+                const isRequired = requiredFields.includes(fieldName);
+                return `${sanitizeName(fieldName)} ${fieldType}${isRequired ? ' NOT NULL' : ''}`;
+            }).join(', ');
 
-            createTableQuery += entity.fields.map(field => `${sanitizeName(field.name)} ${field.type.toUpperCase()}`).join(', ');
+            createTableQuery += fieldDefinitions;
             createTableQuery += ');';
 
+            // Execute the create table query
             db.run(createTableQuery, [], (err) => {
                 if (err) {
                     console.error(`Error creating table ${tableName}:`, err.message);
@@ -75,6 +84,7 @@ router.post('/generate-tables/:schema', (req, res) => {
         res.send('Tables generated successfully.');
     });
 });
+
 
 
 router.post('/upload', upload.single('schema'), (req, res) => {

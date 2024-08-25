@@ -4,11 +4,11 @@
             const router = express.Router();
 
             router.post('/', (req, res) => {
-                const columns = ["make","model"].join(', ');
+                const columns = ["name","email"].join(', ');
                 const placeholders = ["?","?"].join(', ');
-                const values = [req.body['make'], req.body['model']];
+                const values = [req.body['name'], req.body['email']];
 
-                const insertQuery = `INSERT INTO car_person_car (${columns}) VALUES (${placeholders})`;
+                const insertQuery = `INSERT INTO super_corp_employee (${columns}) VALUES (${placeholders})`;
 
                 db.run(insertQuery, values, function(err) {
                     if (err) {
@@ -19,7 +19,7 @@
             });
 
             router.get('/', (req, res) => {
-                const selectQuery = 'SELECT * FROM car_person_car';
+                const selectQuery = 'SELECT * FROM super_corp_employee';
 
                 db.all(selectQuery, [], (err, rows) => {
                     if (err) {
@@ -30,7 +30,7 @@
             });
 
             router.get('/:id', (req, res) => {
-                const selectQuery = 'SELECT * FROM car_person_car WHERE id = ?';
+                const selectQuery = 'SELECT * FROM super_corp_employee WHERE id = ?';
 
                 db.get(selectQuery, [req.params.id], (err, row) => {
                     if (err) {
@@ -44,11 +44,11 @@
             });
 
             router.put('/:id', (req, res) => {
-                const updates = ["\"make\" = ?","\"model\" = ?"].join(', ');
-                const values = [req.body['make'], req.body['model']];
+                const updates = ["\"name\" = ?","\"email\" = ?"].join(', ');
+                const values = [req.body['name'], req.body['email']];
                 values.push(req.params.id);
 
-                const updateQuery = `UPDATE car_person_car SET ${updates} WHERE id = ?`;
+                const updateQuery = `UPDATE super_corp_employee SET ${updates} WHERE id = ?`;
 
                 db.run(updateQuery, values, function(err) {
                     if (err) {
@@ -59,7 +59,7 @@
             });
 
             router.delete('/:id', (req, res) => {
-                const deleteQuery = 'DELETE FROM car_person_car WHERE id = ?';
+                const deleteQuery = 'DELETE FROM super_corp_employee WHERE id = ?';
 
                 db.run(deleteQuery, [req.params.id], function(err) {
                     if (err) {

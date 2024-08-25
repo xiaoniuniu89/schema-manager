@@ -1,0 +1,68 @@
+[
+  {
+    "name": "employee",
+    "jsonSchema": {
+      "$ref": "#/definitions/employee",
+      "definitions": {
+        "employee": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "shift",
+    "jsonSchema": {
+      "$ref": "#/definitions/shift",
+      "definitions": {
+        "shift": {
+          "type": "object",
+          "properties": {
+            "time": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "time"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "payslip",
+    "jsonSchema": {
+      "$ref": "#/definitions/payslip",
+      "definitions": {
+        "payslip": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "amount"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+]

@@ -1,0 +1,31 @@
+[
+  {
+    "name": "Person",
+    "fields": [
+      {
+        "name": "Age",
+        "type": "number"
+      }
+    ],
+    "relationships": []
+  },
+  {
+    "name": "car",
+    "fields": [
+      {
+        "name": "make",
+        "type": "string"
+      },
+      {
+        "name": "model",
+        "type": "string"
+      }
+    ],
+    "relationships": [
+      {
+        "relatedEntity": "Person",
+        "type": "one-to-many"
+      }
+    ]
+  }
+]

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Schemas</title>
+    <style>
+        h1 {
+            color: #333;
+        }
+        .schema-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .schema-list li {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f4f4f4;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .schema-list button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .generate-btn {
+            background-color: #4caf50;
+            color: white;
+        }
+        .sync-btn {
+            background-color: #1976d2;
+            color: white;
+        }
+        .view-btn {
+            background-color: #ffc107;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <!-- Include the Navbar -->
+    <%- include('partials/navbar') %>
+
+
+    <h1>Manage Schemas</h1>
+    <ul id="schema-list" class="schema-list">
+        <!-- Dynamically populated list of schemas -->
+    </ul>
+
+    <script>
+        async function fetchSchemas() {
+            const response = await fetch('/schemas');
+            const schemas = await response.json();
+            const schemaList = document.getElementById('schema-list');
+            schemaList.innerHTML = '';
+
+            schemas.forEach(schema => {
+                const schemaNameWithoutExtension = schema.replace('.json', '');
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${schemaNameWithoutExtension}</span>
+                    <div>
+                        <button class="view-btn" onclick="viewSchema('${schemaNameWithoutExtension}')">View</button>
+                        <button class="generate-btn" onclick="generateTables('${schemaNameWithoutExtension}')">Generate Tables</button>
+                        <button class="sync-btn" onclick="syncEndpoints('${schemaNameWithoutExtension}')">Sync Endpoints</button>
+                    </div>
+                `;
+                schemaList.appendChild(li);
+            });
+        }
+
+        function viewSchema(schema) {
+    window.location.href = `/view-schema?schema=${schema}`;
+}
+
+        function generateTables(schema) {
+            fetch(`/generate-tables/${schema}`, { method: 'POST' })
+                .then(response => response.text())
+                .then(data => alert(data));
+        }
+
+        function syncEndpoints(schema) {
+            fetch(`/sync-endpoints/${schema}`, { method: 'POST' })
+                .then(response => response.text())
+                .then(data => alert(data));
+        }
+
+        fetchSchemas();
+    </script>
+</body>
+</html>

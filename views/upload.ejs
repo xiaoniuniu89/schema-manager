@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload JSON Schema</title>
+</head>
+<body>
+    <!-- Include the Navbar -->
+    <%- include('partials/navbar') %>
+
+    <h1>Upload JSON Schema</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="schema" accept=".json" required>
+        <button type="submit">Upload Schema</button>
+    </form>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent the form from submitting the traditional way
+
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('File uploaded successfully.');
+                } else {
+                    alert('Error uploading file. Please try again.');
+                }
+            } catch (error) {
+                alert('An error occurred: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

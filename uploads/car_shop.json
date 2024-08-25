@@ -1,0 +1,31 @@
+[
+  {
+    "name": "sports_car",
+    "fields": [
+      {
+        "name": "make",
+        "type": "string"
+      },
+      {
+        "name": "model",
+        "type": "string"
+      }
+    ],
+    "relationships": []
+  },
+  {
+    "name": "customer",
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      }
+    ],
+    "relationships": [
+      {
+        "relatedEntity": "sports_car",
+        "type": "one-to-one"
+      }
+    ]
+  }
+]

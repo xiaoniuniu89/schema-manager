@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Schema</title>
+</head>
+<body>
+    <!-- Include the Navbar -->
+    <%- include('partials/navbar') %>
+
+
+    <h1>View Schema: <span id="schema-name"></span></h1>
+    <pre id="schema-content"></pre>
+
+    <script>
+        async function fetchSchema() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const schemaName = urlParams.get('schema');
+            document.getElementById('schema-name').textContent = schemaName;
+
+            const response = await fetch(`/schema/${schemaName}`);
+            const schemaContent = await response.text();
+            document.getElementById('schema-content').textContent = schemaContent;
+        }
+
+        fetchSchema();
+    </script>
+</body>
+</html>

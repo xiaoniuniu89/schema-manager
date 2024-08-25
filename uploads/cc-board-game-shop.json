@@ -1,0 +1,35 @@
+[
+  {
+    "name": "board-game",
+    "fields": [
+      {
+        "name": "price",
+        "type": "number"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      }
+    ],
+    "relationships": []
+  },
+  {
+    "name": "owner",
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "email",
+        "type": "string"
+      }
+    ],
+    "relationships": [
+      {
+        "relatedEntity": "board-game",
+        "type": "many-to-one"
+      }
+    ]
+  }
+]

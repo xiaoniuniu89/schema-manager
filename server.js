@@ -4,6 +4,7 @@ const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swaggerConfig');
 const app = express();
+const favicon = require('serve-favicon');
 const PORT = 8002;
 
 // Set the view engine to EJS
@@ -12,6 +13,7 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
 app.use(express.json());
 app.use(cors());

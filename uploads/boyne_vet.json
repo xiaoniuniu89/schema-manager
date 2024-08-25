@@ -1,0 +1,69 @@
+[
+  {
+    "name": "owner",
+    "jsonSchema": {
+      "$ref": "#/definitions/owner",
+      "definitions": {
+        "owner": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "phone_number": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "phone_number"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "cat",
+    "jsonSchema": {
+      "$ref": "#/definitions/cat",
+      "definitions": {
+        "cat": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "dog",
+    "jsonSchema": {
+      "$ref": "#/definitions/dog",
+      "definitions": {
+        "dog": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+]

@@ -1,0 +1,71 @@
+[
+  {
+    "name": "owner",
+    "jsonSchema": {
+      "$ref": "#/definitions/owner",
+      "definitions": {
+        "owner": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "id": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "name",
+            "email"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {}
+    }
+  },
+  {
+    "name": "cat",
+    "jsonSchema": {
+      "$ref": "#/definitions/cat",
+      "definitions": {
+        "cat": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "id": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        "owner": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "owner_id": {
+          "$ref": "#/definitions/owner",
+          "description": "Reference to the owner"
+        }
+      }
+    }
+  }
+]

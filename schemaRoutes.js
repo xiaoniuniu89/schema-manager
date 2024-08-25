@@ -40,50 +40,87 @@ router.post('/generate-tables/:schema', (req, res) => {
     const schemaName = req.params.schema;
     const schemaPath = path.join(__dirname, 'uploads', `${schemaName}.json`);
 
+    // Step 1: Check if the schema file exists
+    if (!fs.existsSync(schemaPath)) {
+        return res.status(404).send('Schema file not found');
+    }
+
     fs.readFile(schemaPath, 'utf8', (err, data) => {
         if (err) {
             return res.status(500).send('Error reading schema: ' + err);
         }
 
-        const schema = JSON.parse(data);
+        try {
+            const schema = JSON.parse(data);
 
-        schema.forEach(entity => {
-            // Use schema name as a namespace for table names
-            const tableName = `${sanitizeName(schemaName)}_${sanitizeName(entity.name)}`;
+            schema.forEach(entity => {
+                // Use schema name as a namespace for table names
+                const tableName = `${sanitizeName(schemaName)}_${sanitizeName(entity.name)}`;
+                console.log(`Processing entity: ${entity.name}, Table name: ${tableName}`);
 
-            // Retrieve the properties and required fields from the entity's JSON schema
-            const entityDefinition = entity.jsonSchema.definitions[entity.name];
-            const properties = entityDefinition.properties;
-            const requiredFields = entityDefinition.required || [];
-
-            let createTableQuery = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
-
-            // Add the id column
-            createTableQuery += 'id INTEGER PRIMARY KEY AUTOINCREMENT, ';
-
-            // Add each field definition to the create table query
-            const fieldDefinitions = Object.keys(properties).map(fieldName => {
-                const fieldType = properties[fieldName].type.toUpperCase();
-                const isRequired = requiredFields.includes(fieldName);
-                return `${sanitizeName(fieldName)} ${fieldType}${isRequired ? ' NOT NULL' : ''}`;
-            }).join(', ');
-
-            createTableQuery += fieldDefinitions;
-            createTableQuery += ');';
-
-            // Execute the create table query
-            db.run(createTableQuery, [], (err) => {
-                if (err) {
-                    console.error(`Error creating table ${tableName}:`, err.message);
-                } else {
-                    console.log(`Table ${tableName} created successfully.`);
+                // Retrieve the properties and required fields from the entity's JSON schema
+                const entityDefinition = entity.jsonSchema.definitions[entity.name];
+                if (!entityDefinition || !entityDefinition.properties) {
+                    console.error(`Entity definition or properties missing for: ${entity.name}`);
+                    return;
                 }
-            });
-        });
+                const properties = entityDefinition.properties;
+                const requiredFields = entityDefinition.required || [];
 
-        res.send('Tables generated successfully.');
+                let createTableQuery = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
+
+                // Check if 'id' column is already defined in the schema
+                const hasIdColumn = properties.hasOwnProperty('id');
+
+                // Add the id column if it's not already defined in the schema
+                if (!hasIdColumn) {
+                    createTableQuery += 'id INTEGER PRIMARY KEY AUTOINCREMENT, ';
+                }
+
+                // Add each field definition to the create table query
+                const fieldDefinitions = Object.keys(properties).map(fieldName => {
+                    const fieldType = properties[fieldName].type.toUpperCase();
+                    const isRequired = requiredFields.includes(fieldName);
+                    return `${sanitizeName(fieldName)} ${fieldType}${isRequired ? ' NOT NULL' : ''}`;
+                });
+
+                // Add relationship fields as foreign keys
+                if (entity.jsonSchema.properties) {
+                    Object.entries(entity.jsonSchema.properties).forEach(([fieldName, fieldSchema]) => {
+                        if (fieldSchema.$ref) {
+                            const relatedEntityName = fieldSchema.$ref.split('/').pop();
+                            const relatedTableName = `${sanitizeName(schemaName)}_${sanitizeName(relatedEntityName)}`;
+                            const foreignKeyField = `${sanitizeName(fieldName)}`;
+                            fieldDefinitions.push(`${foreignKeyField} INTEGER, FOREIGN KEY(${foreignKeyField}) REFERENCES ${relatedTableName}(id)`);
+                        }
+                    });
+                }
+
+                createTableQuery += fieldDefinitions.join(', ');
+                createTableQuery += ');';
+
+                console.log('Executing query:', createTableQuery);
+
+                // Execute the create table query
+                db.run(createTableQuery, [], (err) => {
+                    if (err) {
+                        console.error(`Error creating table ${tableName}:`, err.message);
+                    } else {
+                        console.log(`Table ${tableName} created successfully.`);
+                    }
+                });
+            });
+
+            res.send('Tables generated successfully.');
+        } catch (parseError) {
+            console.error('Error parsing schema JSON:', parseError.message);
+            res.status(500).send('Error processing schema: ' + parseError.message);
+        }
     });
 });
+
+
+
 
 
 

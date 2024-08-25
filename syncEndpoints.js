@@ -5,13 +5,15 @@ const db = require('./db');
 
 const router = express.Router();
 
-const sanitizeEntityName = (name) => {
-    return name.replace(/[\s-]/g, '_'); // Replace spaces and hyphens with underscores
+// Helper function to sanitize names
+const sanitizeName = (name) => {
+    return name.replace(/[^a-zA-Z0-9_]/g, '_');
 };
 
 router.post('/sync-endpoints/:schema', (req, res) => {
     const schemaName = req.params.schema;
-    const schemaPath = path.join(__dirname, 'uploads', schemaName + '.json');
+    const sanitizedSchemaName = sanitizeName(schemaName);
+    const schemaPath = path.join(__dirname, 'uploads', `${schemaName}.json`);
 
     fs.readFile(schemaPath, 'utf8', (err, data) => {
         if (err) {
@@ -34,7 +36,7 @@ router.post('/sync-endpoints/:schema', (req, res) => {
         }
 
         schema.forEach(entity => {
-            const sanitizedEntityName = sanitizeEntityName(entity.name);
+            const sanitizedEntityName = `${sanitizedSchemaName}_${sanitizeName(entity.name)}`;
             const entityFilePath = path.join(apiFolderPath, `${sanitizedEntityName}.js`);
 
             // Generate CRUD endpoints for the entity
@@ -44,7 +46,7 @@ router.post('/sync-endpoints/:schema', (req, res) => {
             const router = express.Router();
 
             router.post('/', (req, res) => {
-                const columns = ${JSON.stringify(entity.fields.map(field => sanitizeEntityName(field.name)))}.join(', ');
+                const columns = ${JSON.stringify(entity.fields.map(field => sanitizeName(field.name)))}.join(', ');
                 const placeholders = ${JSON.stringify(entity.fields.map(() => '?'))}.join(', ');
                 const values = [${entity.fields.map(field => `req.body['${field.name}']`).join(', ')}];
 
@@ -84,7 +86,7 @@ router.post('/sync-endpoints/:schema', (req, res) => {
             });
 
             router.put('/:id', (req, res) => {
-                const updates = ${JSON.stringify(entity.fields.map(field => `"${sanitizeEntityName(field.name)}" = ?`))}.join(', ');
+                const updates = ${JSON.stringify(entity.fields.map(field => `"${sanitizeName(field.name)}" = ?`))}.join(', ');
                 const values = [${entity.fields.map(field => `req.body['${field.name}']`).join(', ')}];
                 values.push(req.params.id);
 

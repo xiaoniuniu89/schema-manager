@@ -38,20 +38,20 @@ const sanitizeName = (name) => {
 // Route to generate tables from a schema
 router.post('/generate-tables/:schema', (req, res) => {
     const schemaName = req.params.schema;
-    const schemaPath = path.join(__dirname, 'uploads', schemaName + '.json');
+    const schemaPath = path.join(__dirname, 'uploads', `${schemaName}.json`);
 
     fs.readFile(schemaPath, 'utf8', (err, data) => {
         if (err) {
-            return res.status(500).send('Error reading schema');
+            return res.status(500).send('Error reading schema: ' +err);
         }
 
         const schema = JSON.parse(data);
 
         schema.forEach(entity => {
-            // Sanitize the entity name
-            const sanitizedEntityName = sanitizeName(entity.name);
+            // Use schema name as a namespace for table names
+            const tableName = `${sanitizeName(schemaName)}_${sanitizeName(entity.name)}`;
 
-            let createTableQuery = `CREATE TABLE IF NOT EXISTS ${sanitizedEntityName} (`;
+            let createTableQuery = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
 
             const fields = entity.fields.map(field => sanitizeName(field.name));
 
@@ -65,7 +65,9 @@ router.post('/generate-tables/:schema', (req, res) => {
 
             db.run(createTableQuery, [], (err) => {
                 if (err) {
-                    console.error('Error creating table:', err.message);
+                    console.error(`Error creating table ${tableName}:`, err.message);
+                } else {
+                    console.log(`Table ${tableName} created successfully.`);
                 }
             });
         });
@@ -75,16 +77,29 @@ router.post('/generate-tables/:schema', (req, res) => {
 });
 
 
-// Handle file upload and save the JSON schema
 router.post('/upload', upload.single('schema'), (req, res) => {
     const tempPath = req.file.path;
     const targetPath = path.join(__dirname, 'uploads', req.file.originalname);
 
-    fs.rename(tempPath, targetPath, err => {
-        if (err) return res.status(500).send("Error saving file.");
-        res.send("File uploaded successfully.");
-    });
+    // If overwrite flag is set, overwrite the existing file
+    if (req.body.overwrite === 'true' && fs.existsSync(targetPath)) {
+        fs.rename(tempPath, targetPath, err => {
+            if (err) return res.status(500).send("Error overwriting file.");
+            return res.send("File overwritten successfully.");
+        });
+    } else if (fs.existsSync(targetPath)) {
+        // Respond to the frontend indicating the file already exists
+        fs.unlink(tempPath, () => {}); // Delete the temp file
+        return res.status(409).send("File already exists. Do you want to overwrite?");
+    } else {
+        // If no conflict, rename (move) the file to the target location
+        fs.rename(tempPath, targetPath, err => {
+            if (err) return res.status(500).send("Error saving file.");
+            res.send("File uploaded successfully.");
+        });
+    }
 });
+
 
 // Dynamic route to return the JSON data from the uploaded file
 router.get('/schema/:filename', (req, res) => {
@@ -98,6 +113,7 @@ router.get('/schema/:filename', (req, res) => {
     }
 });
 
+
 // Endpoint to list all entities and their CRUD routes
 router.get('/sdk/entities', (req, res) => {
     const schemaDir = path.join(__dirname, 'uploads');
@@ -106,16 +122,18 @@ router.get('/sdk/entities', (req, res) => {
             return res.status(500).send('Error reading schemas');
         }
         const schemas = files.filter(file => path.extname(file) === '.json');
+        
         const entities = schemas.map(file => {
             const schema = JSON.parse(fs.readFileSync(path.join(schemaDir, file), 'utf8'));
+            const sanitizedFileName = sanitizeName(file.replace(/\.json$/, ''));
             return schema.map(entity => ({
-                name: entity.name,
+                name: (`${sanitizedFileName}_${sanitizeName(entity.name)}`),
                 endpoints: {
-                    getAll: `/api/${entity.name}`,
-                    getOne: `/api/${entity.name}/:id`,
-                    create: `/api/${entity.name}`,
-                    update: `/api/${entity.name}/:id`,
-                    delete: `/api/${entity.name}/:id`
+                    getAll: `/api/${sanitizedFileName}_${sanitizeName(entity.name)}`,
+                    getOne: `/api/${sanitizedFileName}_${sanitizeName(entity.name)}/:id`,
+                    create: `/api/${sanitizedFileName}_${sanitizeName(entity.name)}`,
+                    update: `/api/${sanitizedFileName}_${sanitizeName(entity.name)}/:id`,
+                    delete: `/api/${sanitizedFileName}_${sanitizeName(entity.name)}/:id`
                 }
             }));
         }).flat();

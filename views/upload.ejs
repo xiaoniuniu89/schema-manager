@@ -27,7 +27,21 @@
                     body: formData
                 });
 
-                if (response.ok) {
+                if (response.status === 409) { // Conflict, file exists
+                    const overwrite = confirm('File already exists. Do you want to overwrite it?');
+                    if (overwrite) {
+                        formData.append('overwrite', 'true');
+                        const overwriteResponse = await fetch('/upload', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        if (overwriteResponse.ok) {
+                            alert('File overwritten successfully.');
+                        } else {
+                            alert('Error overwriting file. Please try again.');
+                        }
+                    }
+                } else if (response.ok) {
                     alert('File uploaded successfully.');
                 } else {
                     alert('Error uploading file. Please try again.');

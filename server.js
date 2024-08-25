@@ -4,7 +4,7 @@ const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swaggerConfig');
 const app = express();
-const PORT = 3001;
+const PORT = 8002;
 
 // Set the view engine to EJS
 app.set('view engine', 'ejs');

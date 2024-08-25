@@ -1,22 +1,7 @@
 
             const express = require('express');
-            const db = require('../db'); // Assuming you have a db.js file for database operations
+            const db = require('../db');
             const router = express.Router();
-
-            /**
-             * @swagger
-             * /api/teacher:
-             *   get:
-             *     summary: Retrieve a list of teachers
-             *     responses:
-             *       200:
-             *         description: A list of teachers
-             *   post:
-             *     summary: Create a new teacher
-             *     responses:
-             *       201:
-             *         description: The created teacher
-             */
 
             router.post('/', (req, res) => {
                 const columns = ["name"].join(', ');
@@ -33,15 +18,6 @@
                 });
             });
 
-            /**
-             * @swagger
-             * /api/teacher:
-             *   get:
-             *     summary: Retrieve a list of teachers
-             *     responses:
-             *       200:
-             *         description: A list of teachers
-             */
             router.get('/', (req, res) => {
                 const selectQuery = 'SELECT * FROM teacher';
 
@@ -53,15 +29,6 @@
                 });
             });
 
-            /**
-             * @swagger
-             * /api/teacher/{id}:
-             *   get:
-             *     summary: Retrieve a single teacher by ID
-             *     responses:
-             *       200:
-             *         description: A single teacher
-             */
             router.get('/:id', (req, res) => {
                 const selectQuery = 'SELECT * FROM teacher WHERE id = ?';
 
@@ -76,15 +43,6 @@
                 });
             });
 
-            /**
-             * @swagger
-             * /api/teacher/{id}:
-             *   put:
-             *     summary: Update an existing teacher
-             *     responses:
-             *       200:
-             *         description: The updated teacher
-             */
             router.put('/:id', (req, res) => {
                 const updates = ["\"name\" = ?"].join(', ');
                 const values = [req.body['name']];
@@ -96,19 +54,10 @@
                     if (err) {
                         return res.status(500).send('Error updating data');
                     }
-                    res.send('Record updated successfully.');
+                    res.send('Record updated successfully');
                 });
             });
 
-            /**
-             * @swagger
-             * /api/teacher/{id}:
-             *   delete:
-             *     summary: Delete an existing teacher
-             *     responses:
-             *       200:
-             *         description: The deleted teacher
-             */
             router.delete('/:id', (req, res) => {
                 const deleteQuery = 'DELETE FROM teacher WHERE id = ?';
 

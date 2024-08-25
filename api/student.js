@@ -1,47 +1,23 @@
 
             const express = require('express');
-            const db = require('../db'); // Assuming you have a db.js file for database operations
+            const db = require('../db');
             const router = express.Router();
 
-            /**
-             * @swagger
-             * /api/student:
-             *   get:
-             *     summary: Retrieve a list of students
-             *     responses:
-             *       200:
-             *         description: A list of students
-             *   post:
-             *     summary: Create a new student
-             *     responses:
-             *       201:
-             *         description: The created student
-             */
-
             router.post('/', (req, res) => {
-                const columns = ["name","grade","email"].join(', ');
+                const columns = ["name","grade_average","email"].join(', ');
                 const placeholders = ["?","?","?"].join(', ');
-                const values = [req.body['name'], req.body['grade'], req.body['email']];
+                const values = [req.body['name'], req.body['grade average'], req.body['email']];
 
                 const insertQuery = `INSERT INTO student (${columns}) VALUES (${placeholders})`;
 
                 db.run(insertQuery, values, function(err) {
                     if (err) {
-                        return res.status(500).send('Error inserting data: ' + err);
+                        return res.status(500).send('Error inserting data');
                     }
                     res.status(201).send({ id: this.lastID });
                 });
             });
 
-            /**
-             * @swagger
-             * /api/student:
-             *   get:
-             *     summary: Retrieve a list of students
-             *     responses:
-             *       200:
-             *         description: A list of students
-             */
             router.get('/', (req, res) => {
                 const selectQuery = 'SELECT * FROM student';
 
@@ -53,15 +29,6 @@
                 });
             });
 
-            /**
-             * @swagger
-             * /api/student/{id}:
-             *   get:
-             *     summary: Retrieve a single student by ID
-             *     responses:
-             *       200:
-             *         description: A single student
-             */
             router.get('/:id', (req, res) => {
                 const selectQuery = 'SELECT * FROM student WHERE id = ?';
 
@@ -76,18 +43,9 @@
                 });
             });
 
-            /**
-             * @swagger
-             * /api/student/{id}:
-             *   put:
-             *     summary: Update an existing student
-             *     responses:
-             *       200:
-             *         description: The updated student
-             */
             router.put('/:id', (req, res) => {
-                const updates = ["\"name\" = ?","\"grade\" = ?","\"email\" = ?"].join(', ');
-                const values = [req.body['name'], req.body['grade'], req.body['email']];
+                const updates = ["\"name\" = ?","\"grade_average\" = ?","\"email\" = ?"].join(', ');
+                const values = [req.body['name'], req.body['grade average'], req.body['email']];
                 values.push(req.params.id);
 
                 const updateQuery = `UPDATE student SET ${updates} WHERE id = ?`;
@@ -96,19 +54,10 @@
                     if (err) {
                         return res.status(500).send('Error updating data');
                     }
-                    res.send('Record updated successfully.');
+                    res.send('Record updated successfully');
                 });
             });
 
-            /**
-             * @swagger
-             * /api/student/{id}:
-             *   delete:
-             *     summary: Delete an existing student
-             *     responses:
-             *       200:
-             *         description: The deleted student
-             */
             router.delete('/:id', (req, res) => {
                 const deleteQuery = 'DELETE FROM student WHERE id = ?';
 

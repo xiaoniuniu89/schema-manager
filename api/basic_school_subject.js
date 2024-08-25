@@ -8,7 +8,7 @@
                 const placeholders = ["?","?","?"].join(', ');
                 const values = [req.body['name'], req.body['id'], req.body['teacher']];
 
-                const insertQuery = `INSERT INTO subject (${columns}) VALUES (${placeholders})`;
+                const insertQuery = `INSERT INTO basic_school_subject (${columns}) VALUES (${placeholders})`;
 
                 db.run(insertQuery, values, function(err) {
                     if (err) {
@@ -19,7 +19,7 @@
             });
 
             router.get('/', (req, res) => {
-                const selectQuery = 'SELECT * FROM subject';
+                const selectQuery = 'SELECT * FROM basic_school_subject';
 
                 db.all(selectQuery, [], (err, rows) => {
                     if (err) {
@@ -30,7 +30,7 @@
             });
 
             router.get('/:id', (req, res) => {
-                const selectQuery = 'SELECT * FROM subject WHERE id = ?';
+                const selectQuery = 'SELECT * FROM basic_school_subject WHERE id = ?';
 
                 db.get(selectQuery, [req.params.id], (err, row) => {
                     if (err) {
@@ -48,7 +48,7 @@
                 const values = [req.body['name'], req.body['id'], req.body['teacher']];
                 values.push(req.params.id);
 
-                const updateQuery = `UPDATE subject SET ${updates} WHERE id = ?`;
+                const updateQuery = `UPDATE basic_school_subject SET ${updates} WHERE id = ?`;
 
                 db.run(updateQuery, values, function(err) {
                     if (err) {
@@ -59,7 +59,7 @@
             });
 
             router.delete('/:id', (req, res) => {
-                const deleteQuery = 'DELETE FROM subject WHERE id = ?';
+                const deleteQuery = 'DELETE FROM basic_school_subject WHERE id = ?';
 
                 db.run(deleteQuery, [req.params.id], function(err) {
                     if (err) {

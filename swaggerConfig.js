@@ -2,25 +2,25 @@
         const swaggerSpec = {
             openapi: '3.0.0',
             info: {
-                title: 'basic_vet API',
+                title: 'swr_post API',
                 version: '1.0.0',
             },
             paths: {
-  "/api/basic_vet_owner": {
+  "/api/swr_post_swr_post": {
     "get": {
       "tags": [
-        "basic_vet_owner"
+        "swr_post_swr_post"
       ],
-      "summary": "Get all basic_vet_owner",
+      "summary": "Get all swr_post_swr_post",
       "responses": {
         "200": {
-          "description": "A list of basic_vet_owner",
+          "description": "A list of swr_post_swr_post",
           "content": {
             "application/json": {
               "schema": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/basic_vet_owner"
+                  "$ref": "#/components/schemas/swr_post_swr_post"
                 }
               }
             }
@@ -30,32 +30,32 @@
     },
     "post": {
       "tags": [
-        "basic_vet_owner"
+        "swr_post_swr_post"
       ],
-      "summary": "Create a new basic_vet_owner",
+      "summary": "Create a new swr_post_swr_post",
       "requestBody": {
         "required": true,
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/basic_vet_owner"
+              "$ref": "#/components/schemas/swr_post_swr_post"
             }
           }
         }
       },
       "responses": {
         "201": {
-          "description": "basic_vet_owner created"
+          "description": "swr_post_swr_post created"
         }
       }
     }
   },
-  "/api/basic_vet_owner/:id": {
+  "/api/swr_post_swr_post/:id": {
     "get": {
       "tags": [
-        "basic_vet_owner"
+        "swr_post_swr_post"
       ],
-      "summary": "Get a single basic_vet_owner by ID",
+      "summary": "Get a single swr_post_swr_post by ID",
       "parameters": [
         {
           "name": "id",
@@ -68,11 +68,11 @@
       ],
       "responses": {
         "200": {
-          "description": "A single basic_vet_owner",
+          "description": "A single swr_post_swr_post",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/basic_vet_owner"
+                "$ref": "#/components/schemas/swr_post_swr_post"
               }
             }
           }
@@ -81,9 +81,9 @@
     },
     "put": {
       "tags": [
-        "basic_vet_owner"
+        "swr_post_swr_post"
       ],
-      "summary": "Update an existing basic_vet_owner",
+      "summary": "Update an existing swr_post_swr_post",
       "parameters": [
         {
           "name": "id",
@@ -99,22 +99,22 @@
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/basic_vet_owner"
+              "$ref": "#/components/schemas/swr_post_swr_post"
             }
           }
         }
       },
       "responses": {
         "200": {
-          "description": "basic_vet_owner updated"
+          "description": "swr_post_swr_post updated"
         }
       }
     },
     "delete": {
       "tags": [
-        "basic_vet_owner"
+        "swr_post_swr_post"
       ],
-      "summary": "Delete an existing basic_vet_owner",
+      "summary": "Delete an existing swr_post_swr_post",
       "parameters": [
         {
           "name": "id",
@@ -127,180 +127,14 @@
       ],
       "responses": {
         "200": {
-          "description": "basic_vet_owner deleted"
-        }
-      }
-    }
-  },
-  "/api/basic_vet_cat": {
-    "get": {
-      "tags": [
-        "basic_vet_cat"
-      ],
-      "summary": "Get all basic_vet_cat",
-      "responses": {
-        "200": {
-          "description": "A list of basic_vet_cat",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/basic_vet_cat"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "post": {
-      "tags": [
-        "basic_vet_cat"
-      ],
-      "summary": "Create a new basic_vet_cat",
-      "requestBody": {
-        "required": true,
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/basic_vet_cat"
-            }
-          }
-        }
-      },
-      "responses": {
-        "201": {
-          "description": "basic_vet_cat created"
-        }
-      }
-    }
-  },
-  "/api/basic_vet_cat/:id": {
-    "get": {
-      "tags": [
-        "basic_vet_cat"
-      ],
-      "summary": "Get a single basic_vet_cat by ID",
-      "parameters": [
-        {
-          "name": "id",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "integer"
-          }
-        }
-      ],
-      "responses": {
-        "200": {
-          "description": "A single basic_vet_cat",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/basic_vet_cat"
-              }
-            }
-          }
-        }
-      }
-    },
-    "put": {
-      "tags": [
-        "basic_vet_cat"
-      ],
-      "summary": "Update an existing basic_vet_cat",
-      "parameters": [
-        {
-          "name": "id",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "integer"
-          }
-        }
-      ],
-      "requestBody": {
-        "required": true,
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/basic_vet_cat"
-            }
-          }
-        }
-      },
-      "responses": {
-        "200": {
-          "description": "basic_vet_cat updated"
-        }
-      }
-    },
-    "delete": {
-      "tags": [
-        "basic_vet_cat"
-      ],
-      "summary": "Delete an existing basic_vet_cat",
-      "parameters": [
-        {
-          "name": "id",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "integer"
-          }
-        }
-      ],
-      "responses": {
-        "200": {
-          "description": "basic_vet_cat deleted"
+          "description": "swr_post_swr_post deleted"
         }
       }
     }
   }
 },
             components: {
-                schemas: {
-  "basic_vet_owner": {
-    "type": "object",
-    "properties": {
-      "name": {
-        "type": "string"
-      },
-      "email": {
-        "type": "string"
-      },
-      "id": {
-        "type": "integer",
-        "exclusiveMinimum": 0
-      }
-    },
-    "required": [
-      "name",
-      "email"
-    ]
-  },
-  "basic_vet_cat": {
-    "type": "object",
-    "properties": {
-      "name": {
-        "type": "string"
-      },
-      "id": {
-        "type": "integer",
-        "exclusiveMinimum": 0
-      },
-      "owner_id": {
-        "type": "integer",
-        "description": "Reference to the owner"
-      }
-    },
-    "required": [
-      "name",
-      "owner_id"
-    ]
-  }
-}
+                schemas: {}
             }
         };
 

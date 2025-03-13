@@ -1,0 +1,31 @@
+[
+  {
+    "name": "swr_post",
+    "jsonSchema": {
+      "$ref": "#/definitions/swr_post",
+      "definitions": {
+        "swr_post": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            },
+            "tag": {
+              "type": "string"
+            },
+            "id": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {}
+    }
+  }
+]

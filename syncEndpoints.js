@@ -168,6 +168,7 @@ router.post('/sync-endpoints/:schema', (req, res) => {
 
     fs.readFile(schemaPath, 'utf8', (err, data) => {
         if (err) {
+            console.error(err);
             return res.status(500).send('Error reading schema');
         }
 
@@ -191,21 +192,61 @@ router.post('/sync-endpoints/:schema', (req, res) => {
             const sanitizedEntityName = `${sanitizedSchemaName}_${sanitizeName(entity.name)}`;
             const entityFilePath = path.join(apiFolderPath, `${sanitizedEntityName}.js`);
 
+            // Fix: Check if properties exist at the root level, if not, check in definitions
+            let properties = entity.jsonSchema.properties;
+            if (!properties || Object.keys(properties).length === 0) {
+                // Try to get properties from definitions
+                if (entity.jsonSchema.definitions && 
+                    entity.jsonSchema.definitions[entity.name] && 
+                    entity.jsonSchema.definitions[entity.name].properties) {
+                    properties = entity.jsonSchema.definitions[entity.name].properties;
+                }
+            }
+
+            // Ensure properties is not undefined
+            properties = properties || {};
+            
+            // Fix: Define columns and placeholders as variables in the generated code
+            const columnsArray = Object.keys(properties);
+            const placeholdersArray = columnsArray.map(() => '?');
+            
             const routeDefinitions = `
             const express = require('express');
             const db = require('../db');
             const router = express.Router();
 
             router.post('/', (req, res) => {
-                const columns = ${JSON.stringify(Object.keys(entity.jsonSchema.properties))}.join(', ');
-                const placeholders = ${JSON.stringify(Object.keys(entity.jsonSchema.properties).map(() => '?'))}.join(', ');
-                const values = [${Object.keys(entity.jsonSchema.properties).map(key => `req.body['${key}']`).join(', ')}];
+                // Get column names from the request body that are actually present
+                const availableColumns = [${columnsArray.map(col => `'${col}'`).join(', ')}];
+                const columnsToInsert = availableColumns.filter(col => req.body[col] !== undefined);
+                
+                // Check if there are any columns to insert
+                if (columnsToInsert.length === 0) {
+                    return res.status(400).send({
+                        error: 'No valid columns to insert',
+                        availableColumns: availableColumns,
+                        receivedBody: req.body
+                    });
+                }
+                
+                // Create variables for the SQL query
+                const columns = columnsToInsert.join(', ');
+                const placeholders = columnsToInsert.map(() => '?').join(', ');
+                const values = columnsToInsert.map(col => req.body[col]);
 
                 const insertQuery = \`INSERT INTO ${sanitizedEntityName} (\${columns}) VALUES (\${placeholders})\`;
+                
+                // Log the query for debugging
+                console.log('Executing query:', insertQuery, 'with values:', values);
 
                 db.run(insertQuery, values, function(err) {
                     if (err) {
-                        return res.status(500).send('Error inserting data');
+                        console.error(err);
+                        return res.status(500).send({
+                            error: err.message,
+                            query: insertQuery,
+                            values: values
+                        });
                     }
                     res.status(201).send({ id: this.lastID });
                 });
@@ -216,7 +257,11 @@ router.post('/sync-endpoints/:schema', (req, res) => {
 
                 db.all(selectQuery, [], (err, rows) => {
                     if (err) {
-                        return res.status(500).send('Error retrieving data');
+                        console.error(err);
+                        return res.status(500).send({
+                            error: err.message,
+                            query: selectQuery
+                        });
                     }
                     res.send(rows);
                 });
@@ -227,7 +272,12 @@ router.post('/sync-endpoints/:schema', (req, res) => {
 
                 db.get(selectQuery, [req.params.id], (err, row) => {
                     if (err) {
-                        return res.status(500).send('Error retrieving data');
+                        console.error(err);
+                        return res.status(500).send({
+                            error: err.message,
+                            query: selectQuery,
+                            values: [req.params.id]
+                        });
                     }
                     if (!row) {
                         return res.status(404).send('Record not found');
@@ -237,15 +287,37 @@ router.post('/sync-endpoints/:schema', (req, res) => {
             });
 
             router.put('/:id', (req, res) => {
-                const updates = ${JSON.stringify(Object.keys(entity.jsonSchema.properties).map(key => `"${sanitizeName(key)}" = ?`))}.join(', ');
-                const values = [${Object.keys(entity.jsonSchema.properties).map(key => `req.body['${key}']`).join(', ')}];
+                // Get column names from the request body that are actually present
+                const availableColumns = [${columnsArray.map(col => `'${col}'`).join(', ')}];
+                const columnsToUpdate = availableColumns.filter(col => req.body[col] !== undefined);
+                
+                // Check if there are any columns to update
+                if (columnsToUpdate.length === 0) {
+                    return res.status(400).send({
+                        error: 'No valid columns to update',
+                        availableColumns: availableColumns,
+                        receivedBody: req.body
+                    });
+                }
+                
+                // Create variables for the SQL query
+                const updates = columnsToUpdate.map(col => \`\${col} = ?\`).join(', ');
+                const values = columnsToUpdate.map(col => req.body[col]);
                 values.push(req.params.id);
 
                 const updateQuery = \`UPDATE ${sanitizedEntityName} SET \${updates} WHERE id = ?\`;
+                
+                // Log the query for debugging
+                console.log('Executing query:', updateQuery, 'with values:', values);
 
                 db.run(updateQuery, values, function(err) {
                     if (err) {
-                        return res.status(500).send('Error updating data');
+                        console.error(err);
+                        return res.status(500).send({
+                            error: err.message,
+                            query: updateQuery,
+                            values: values
+                        });
                     }
                     res.send('Record updated successfully');
                 });
@@ -256,7 +328,12 @@ router.post('/sync-endpoints/:schema', (req, res) => {
 
                 db.run(deleteQuery, [req.params.id], function(err) {
                     if (err) {
-                        return res.status(500).send('Error deleting data');
+                        console.error(err);
+                        return res.status(500).send({
+                            error: err.message,
+                            query: deleteQuery,
+                            values: [req.params.id]
+                        });
                     }
                     res.send('Record deleted successfully.');
                 });

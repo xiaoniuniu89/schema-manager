@@ -52,6 +52,7 @@ router.post('/generate-tables/:schema', (req, res) => {
 
         try {
             const schema = JSON.parse(data);
+            let tableCreationPromises = [];
 
             schema.forEach(entity => {
                 // Use schema name as a namespace for table names
@@ -68,20 +69,48 @@ router.post('/generate-tables/:schema', (req, res) => {
                 const requiredFields = entityDefinition.required || [];
 
                 let createTableQuery = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
+                let fieldDefinitions = [];
 
-                // Check if 'id' column is already defined in the schema
-                const hasIdColumn = properties.hasOwnProperty('id');
-
-                // Add the id column if it's not already defined in the schema
-                if (!hasIdColumn) {
-                    createTableQuery += 'id INTEGER PRIMARY KEY AUTOINCREMENT, ';
+                // Handle ID column specifically to ensure auto-increment
+                if (properties.hasOwnProperty('id')) {
+                    // If id exists in schema, make sure it's set up as PRIMARY KEY
+                    fieldDefinitions.push('id INTEGER PRIMARY KEY');
+                } else {
+                    // Add id if not in schema
+                    fieldDefinitions.push('id INTEGER PRIMARY KEY AUTOINCREMENT');
                 }
 
-                // Add each field definition to the create table query
-                const fieldDefinitions = Object.keys(properties).map(fieldName => {
-                    const fieldType = properties[fieldName].type.toUpperCase();
+                // Convert JSON schema types to SQLite types
+                Object.keys(properties).forEach(fieldName => {
+                    if (fieldName === 'id') return; // Skip id as we've already handled it
+
+                    const property = properties[fieldName];
                     const isRequired = requiredFields.includes(fieldName);
-                    return `${sanitizeName(fieldName)} ${fieldType}${isRequired ? ' NOT NULL' : ''}`;
+                    let sqlType = 'TEXT'; // Default type
+
+                    // Convert JSON schema types to SQLite types
+                    if (property.type) {
+                        switch(property.type.toLowerCase()) {
+                            case 'integer':
+                            case 'number':
+                                sqlType = 'INTEGER';
+                                break;
+                            case 'boolean':
+                                sqlType = 'INTEGER'; // SQLite doesn't have boolean, use INTEGER (0/1)
+                                break;
+                            case 'object':
+                            case 'array':
+                                sqlType = 'TEXT'; // Store JSON as TEXT
+                                break;
+                            case 'null':
+                                sqlType = 'NULL';
+                                break;
+                            default:
+                                sqlType = 'TEXT'; // Default for string and other types
+                        }
+                    }
+
+                    fieldDefinitions.push(`${sanitizeName(fieldName)} ${sqlType}${isRequired ? ' NOT NULL' : ''}`);
                 });
 
                 // Add relationship fields as foreign keys
@@ -101,17 +130,31 @@ router.post('/generate-tables/:schema', (req, res) => {
 
                 console.log('Executing query:', createTableQuery);
 
-                // Execute the create table query
-                db.run(createTableQuery, [], (err) => {
-                    if (err) {
-                        console.error(`Error creating table ${tableName}:`, err.message);
-                    } else {
-                        console.log(`Table ${tableName} created successfully.`);
-                    }
+                // Create a promise for each table creation
+                const tablePromise = new Promise((resolve, reject) => {
+                    db.run(createTableQuery, [], (err) => {
+                        if (err) {
+                            console.error(`Error creating table ${tableName}:`, err.message);
+                            reject(err);
+                        } else {
+                            console.log(`Table ${tableName} created successfully.`);
+                            resolve();
+                        }
+                    });
                 });
+
+                tableCreationPromises.push(tablePromise);
             });
 
-            res.send('Tables generated successfully.');
+            // Wait for all tables to be created
+            Promise.all(tableCreationPromises)
+                .then(() => {
+                    res.send('Tables generated successfully.');
+                })
+                .catch((error) => {
+                    res.status(500).send(`Error creating tables: ${error.message}`);
+                });
+
         } catch (parseError) {
             console.error('Error parsing schema JSON:', parseError.message);
             res.status(500).send('Error processing schema: ' + parseError.message);

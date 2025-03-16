@@ -157,9 +157,47 @@ const generateSwaggerSchemas = (sanitizedEntityName, entitySchema) => {
     };
 };
 
+// Get existing Swagger configuration or create a new one
+const getExistingSwaggerConfig = () => {
+    const swaggerFilePath = path.join(__dirname, 'swaggerConfig.js');
+    
+    if (fs.existsSync(swaggerFilePath)) {
+        // Delete cache to ensure we get the latest version
+        delete require.cache[require.resolve(swaggerFilePath)];
+        
+        try {
+            return require(swaggerFilePath);
+        } catch (error) {
+            console.error('Error loading existing Swagger config:', error);
+        }
+    }
+    
+    // Return a default config if file doesn't exist or there was an error
+    return {
+        openapi: '3.0.0',
+        info: {
+            title: 'API Documentation',
+            version: '1.0.0',
+        },
+        paths: {},
+        components: {
+            schemas: {}
+        }
+    };
+};
 
+// Write updated Swagger configuration
+const writeSwaggerConfig = (config) => {
+    const swaggerFilePath = path.join(__dirname, 'swaggerConfig.js');
+    
+    const swaggerTemplate = `
+    const swaggerSpec = ${JSON.stringify(config, null, 2)};
 
+    module.exports = swaggerSpec;
+    `;
 
+    fs.writeFileSync(swaggerFilePath, swaggerTemplate);
+};
 
 router.post('/sync-endpoints/:schema', (req, res) => {
     const schemaName = req.params.schema;
@@ -185,8 +223,12 @@ router.post('/sync-endpoints/:schema', (req, res) => {
             indexFileContent = fs.readFileSync(indexFilePath, 'utf8');
         }
 
-        let swaggerPaths = {};
-        let swaggerSchemas = {};
+        // Get existing Swagger configuration
+        const existingSwaggerConfig = getExistingSwaggerConfig();
+        
+        // Initialize paths and schemas with existing ones
+        let swaggerPaths = existingSwaggerConfig.paths || {};
+        let swaggerSchemas = existingSwaggerConfig.components?.schemas || {};
 
         schema.forEach(entity => {
             const sanitizedEntityName = `${sanitizedSchemaName}_${sanitizeName(entity.name)}`;
@@ -350,6 +392,7 @@ router.post('/sync-endpoints/:schema', (req, res) => {
                 indexFileContent += `${exportStatement}\n`;
             }
 
+            // Add new paths and schemas to the existing ones
             swaggerPaths = {
                 ...swaggerPaths,
                 ...generateSwaggerPaths(sanitizedEntityName)
@@ -363,26 +406,23 @@ router.post('/sync-endpoints/:schema', (req, res) => {
 
         fs.writeFileSync(indexFilePath, indexFileContent);
 
-        const swaggerFilePath = path.join(__dirname, 'swaggerConfig.js');
-        const swaggerTemplate = `
-        const swaggerSpec = {
+        // Update Swagger configuration with merged paths and schemas
+        const updatedSwaggerConfig = {
             openapi: '3.0.0',
             info: {
-                title: '${schemaName} API',
-                version: '1.0.0',
+                title: existingSwaggerConfig.info?.title || 'API Documentation',
+                version: existingSwaggerConfig.info?.version || '1.0.0',
+                description: `Documentation includes: ${schemaName} and other schemas`
             },
-            paths: ${JSON.stringify(swaggerPaths, null, 2)},
+            paths: swaggerPaths,
             components: {
-                schemas: ${JSON.stringify(swaggerSchemas, null, 2)}
+                schemas: swaggerSchemas
             }
         };
 
-        module.exports = swaggerSpec;
-        `;
+        writeSwaggerConfig(updatedSwaggerConfig);
 
-        fs.writeFileSync(swaggerFilePath, swaggerTemplate);
-
-        res.send('API endpoints synchronized and Swagger documentation generated successfully.');
+        res.send('API endpoints synchronized and Swagger documentation updated successfully.');
     });
 });
 

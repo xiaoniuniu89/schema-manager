@@ -55,6 +55,17 @@ app.get('/', (req, res) => {
     res.render('index');
 });
 
+
+app.get('/entity-creator', (req, res) => {
+    res.render('entity-creator-wrapper');
+  });
+  
+  app.use('/entity-creator-app', express.static(path.join(__dirname, './entityDesigner')));
+
+  app.get('/entity-creator-app/*', (req, res) => {
+    res.sendFile(path.join(__dirname, './entityDesigner/index.html'));
+  });;
+
 // Render the schema upload page
 app.get('/upload', (req, res) => {
     res.render('upload');
